@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ethics-hiring-tracker-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ethics_hiring_tracker
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
