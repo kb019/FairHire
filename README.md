@@ -2,6 +2,10 @@
 
 Ethics Hiring Tracker is a bias-aware hiring workflow that turns fairness from a policy statement into a product behavior. Instead of treating bias review as a separate compliance task, the platform inserts it directly into job creation, applicant intake, and candidate review.
 
+## Live Demo
+
+**Hosted application:** [https://fairhire-frontend.onrender.com/](https://fairhire-frontend.onrender.com/)
+
 The system supports two user journeys:
 
 - `HR teams` create job postings, review compliance issues, monitor trends, and evaluate anonymized candidates
