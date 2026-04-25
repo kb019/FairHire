@@ -52,6 +52,7 @@ export function JobPostingEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [score, setScore] = useState(100);
   const [issues, setIssues] = useState<Issue[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [savedPostingId, setSavedPostingId] = useState("");
   const [analysisError, setAnalysisError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
@@ -71,10 +72,12 @@ export function JobPostingEditorPage() {
     if (!form.content.trim()) {
       setScore(100);
       setIssues([]);
+      setIsAnalyzing(false);
       setAnalysisError("");
       return;
     }
 
+    setIsAnalyzing(true);
     const timer = window.setTimeout(async () => {
       try {
         const response = await api.post("/analyze/job-posting", {
@@ -85,10 +88,14 @@ export function JobPostingEditorPage() {
         setAnalysisError("");
       } catch (error: any) {
         setAnalysisError(error.response?.data?.error ?? "Live analysis unavailable.");
+      } finally {
+        setIsAnalyzing(false);
       }
     }, 1000);
 
-    return () => window.clearTimeout(timer);
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [form.content]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -323,9 +330,15 @@ export function JobPostingEditorPage() {
                     ? "Strong baseline. Keep the requirements specific."
                     : score >= 50
                       ? "Usable draft, but some language still needs refinement."
-                      : "This posting needs revision before it is ready for candidates."}
+                    : "This posting needs revision before it is ready for candidates."}
                 </small>
               </div>
+              {isAnalyzing ? (
+                <div className="analysis-loading">
+                  <span className="analysis-loading__spinner" aria-hidden="true" />
+                  <span>Analyzing job description...</span>
+                </div>
+              ) : null}
               <div className="review-score__grid">
                 <article className="review-stat">
                   <span>Critical</span>
@@ -349,7 +362,7 @@ export function JobPostingEditorPage() {
                   <span className="section-kicker">Review rail</span>
                   <h3>Detected issues</h3>
                 </div>
-                <p>Each flag includes the phrase, why it matters, and what to rewrite.</p>
+                <p>{isAnalyzing ? "Running bias detection on the current draft." : "Each flag includes the phrase, why it matters, and what to rewrite."}</p>
               </div>
               <div className="issue-list">
                 {issues.map((issue) => (

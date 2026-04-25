@@ -368,6 +368,7 @@ button {
 
 .applicant-tracker-grid {
   grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .card,
@@ -782,6 +783,20 @@ button {
   font-weight: 600;
 }
 
+.applicant-tracker-stat {
+  gap: 10px;
+  align-content: start;
+  padding: 14px;
+}
+
+.applicant-tracker-stat strong {
+  display: block;
+  font-size: 0.88rem;
+  line-height: 1.35;
+  font-weight: 600;
+  color: var(--ink);
+}
+
 .workspace-list-card,
 .candidate-card,
 .candidate-section-card,
@@ -935,6 +950,34 @@ button {
 .score-badge--bad {
   background: var(--danger-soft);
   border-color: rgba(179, 79, 95, 0.16);
+}
+
+.analysis-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(15, 79, 140, 0.1);
+  border-radius: 12px;
+  background: rgba(15, 79, 140, 0.05);
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+.analysis-loading__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(15, 79, 140, 0.18);
+  border-top-color: var(--accent);
+  border-radius: 999px;
+  animation: analysis-spin 800ms linear infinite;
+}
+
+@keyframes analysis-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .issue-card__header {
