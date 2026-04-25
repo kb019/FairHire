@@ -23,6 +23,7 @@ const addressPatterns = [
 ];
 const phonePattern = /(?:\+?\d{1,2}\s*)?(?:\(?\d{3}\)?[\s.-]*)\d{3}[\s.-]*\d{4}/;
 const emailPattern = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i;
+const withheldInstitutionLabel = "Institution withheld";
 
 function removePatterns(text: string, patterns: RegExp[]) {
   return patterns.reduce((current, pattern) => current.replace(pattern, "").replace(/\s{2,}/g, " ").trim(), text);
@@ -102,7 +103,7 @@ function sanitizeEducationItems(
 ): Array<Omit<ResumeEducationItem, "graduation_year">> {
   return items.map((item) => ({
     degree: sanitizeText(item.degree, anonymousId, personNames),
-    institution: sanitizeText(item.institution, anonymousId, personNames),
+    institution: item.institution ? withheldInstitutionLabel : "",
   }));
 }
 
@@ -127,4 +128,3 @@ export function redactParsedResume(parsedResume: ParsedResume, anonymousId: stri
     contact,
   };
 }
-

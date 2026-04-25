@@ -40,7 +40,7 @@ jobPostingsRouter.get(
   asyncHandler(async (_req, res) => {
     const result = await query(
       `
-        SELECT id, title, industry_category, department, location, employment_type, compensation_range, compliance_score, created_at
+        SELECT id, title, industry_category, department, location, employment_type, compensation_range, content, compliance_score, created_at
         FROM job_postings
         WHERE status <> 'archived'
         ORDER BY created_at DESC

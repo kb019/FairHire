@@ -31,4 +31,5 @@ export const env = {
   jwtSecret: requireEnv("JWT_SECRET", "development-only-secret-change-me"),
   openAiApiKey: process.env.OPENAI_API_KEY ?? "",
   openAiAnalysisModel: process.env.OPENAI_ANALYSIS_MODEL ?? "gpt-5.4-mini",
+  openAiResumeParserModel: process.env.OPENAI_RESUME_PARSER_MODEL ?? "gpt-5.4-mini",
 };

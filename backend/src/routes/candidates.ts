@@ -1,7 +1,18 @@
 import { Router } from "express";
 import { contactDisclosurePool, query } from "../db/client.js";
 import { requireAuth, requireHr } from "../middleware/auth.js";
+import type { RedactedResume } from "../types/api.js";
 import { asyncHandler } from "../utils/http.js";
+
+function sanitizeCandidateResumeForReview(redactedContent: RedactedResume) {
+  return {
+    ...redactedContent,
+    education: (redactedContent.education ?? []).map((item) => ({
+      ...item,
+      institution: item.institution ? "Institution withheld" : "",
+    })),
+  };
+}
 
 async function verifyOwnership(jobPostingId: string, hrUserId: string) {
   const result = await query<{ id: string }>(
@@ -90,7 +101,10 @@ candidatesRouter.get(
       return;
     }
 
-    res.json(result.rows[0]);
+    res.json({
+      ...result.rows[0],
+      redacted_content: sanitizeCandidateResumeForReview(result.rows[0].redacted_content as RedactedResume),
+    });
   })
 );
 
@@ -182,4 +196,3 @@ candidatesRouter.post(
     });
   })
 );
-

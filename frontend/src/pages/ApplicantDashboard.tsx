@@ -7,7 +7,11 @@ interface PublicJobPosting {
   id: string;
   title: string;
   industry_category: string;
+  department: string | null;
   location: string | null;
+  employment_type: string | null;
+  compensation_range: string | null;
+  content: string;
 }
 
 export function ApplicantDashboardPage() {
@@ -65,8 +69,8 @@ export function ApplicantDashboardPage() {
   return (
     <Shell title="Applicant dashboard">
       <section className="panel panel--wide">
-        <div className="editor-layout">
-          <form className="panel form-panel" onSubmit={handleSubmit}>
+        <div className="applicant-dashboard-layout">
+          <form className="panel form-panel applicant-apply-panel" onSubmit={handleSubmit}>
             <label className="field">
               <span>Job posting</span>
               <select
@@ -81,10 +85,20 @@ export function ApplicantDashboardPage() {
               </select>
             </label>
             {selectedPosting ? (
-              <p className="feedback">
-                {getJobPostingCategoryLabel(selectedPosting.industry_category)}
-                {selectedPosting.location ? ` | ${selectedPosting.location}` : ""}
-              </p>
+              <div className="applicant-job-meta">
+                <span className="candidate-chip candidate-chip--muted">
+                  {getJobPostingCategoryLabel(selectedPosting.industry_category)}
+                </span>
+                {selectedPosting.department ? (
+                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.department}</span>
+                ) : null}
+                {selectedPosting.location ? (
+                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.location}</span>
+                ) : null}
+                {selectedPosting.compensation_range ? (
+                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.compensation_range}</span>
+                ) : null}
+              </div>
             ) : null}
             <label className="field">
               <span>Resume file</span>
@@ -100,22 +114,90 @@ export function ApplicantDashboardPage() {
               {busy ? "Submitting..." : "Submit resume"}
             </button>
           </form>
-          <aside className="panel score-panel">
-            <h2>Your submissions</h2>
-            <div className="list">
-              {submissions.map((submission) => (
-                <article className="list-item" key={submission.id}>
-                  <div>
-                    <strong>{submission.title}</strong>
-                    <p>
-                      {submission.anonymous_id} | {submission.review_status}
-                    </p>
+          <aside className="score-panel applicant-dashboard-stack">
+            <section className="panel applicant-posting-panel">
+              {selectedPosting ? (
+                <>
+                  <div className="applicant-posting-hero">
+                    <div className="applicant-posting-hero__copy">
+                      <span className="section-kicker">Posting details</span>
+                      <h2>{selectedPosting.title}</h2>
+                      <div className="applicant-job-meta applicant-job-meta--hero">
+                        <span className="candidate-chip candidate-chip--muted">
+                          {getJobPostingCategoryLabel(selectedPosting.industry_category)}
+                        </span>
+                        {selectedPosting.employment_type ? (
+                          <span className="candidate-chip candidate-chip--muted">{selectedPosting.employment_type}</span>
+                        ) : null}
+                        {selectedPosting.department ? (
+                          <span className="candidate-chip candidate-chip--muted">{selectedPosting.department}</span>
+                        ) : null}
+                      </div>
+                    </div>
                   </div>
-                  <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>
-                </article>
-              ))}
-              {!submissions.length ? <p className="feedback">No submissions yet.</p> : null}
-            </div>
+
+                  <div className="applicant-detail-grid">
+                    <article className="applicant-detail-row">
+                      <span>Role name</span>
+                      <strong>{selectedPosting.title}</strong>
+                    </article>
+                    <article className="applicant-detail-row">
+                      <span>Department</span>
+                      <strong>{selectedPosting.department || "Not listed"}</strong>
+                    </article>
+                    <article className="applicant-detail-row">
+                      <span>Location</span>
+                      <strong>{selectedPosting.location || "Not listed"}</strong>
+                    </article>
+                    <article className="applicant-detail-row">
+                      <span>Compensation</span>
+                      <strong>{selectedPosting.compensation_range || "Not listed"}</strong>
+                    </article>
+                    <article className="applicant-detail-row">
+                      <span>Employment type</span>
+                      <strong>{selectedPosting.employment_type || "Not listed"}</strong>
+                    </article>
+                    <article className="applicant-detail-row">
+                      <span>Category</span>
+                      <strong>{getJobPostingCategoryLabel(selectedPosting.industry_category)}</strong>
+                    </article>
+                  </div>
+
+                  <section className="applicant-description-card">
+                    <div className="applicant-section-header">
+                      <h3>Job description</h3>
+                    </div>
+                    <p className="applicant-description-text">{selectedPosting.content || "No description available."}</p>
+                  </section>
+                </>
+              ) : (
+                <div className="applicant-posting-empty">
+                  <span className="section-kicker">Posting details</span>
+                  <h2>Select a job posting</h2>
+                  <p>Choose a role from the form to review the description, department, location, and compensation before you apply.</p>
+                </div>
+              )}
+            </section>
+
+            <section className="panel applicant-submissions-panel">
+              <div className="applicant-section-header">
+                <h2>Your submissions</h2>
+              </div>
+              <div className="list">
+                {submissions.map((submission) => (
+                  <article className="list-item" key={submission.id}>
+                    <div>
+                      <strong>{submission.title}</strong>
+                      <p>
+                        {submission.anonymous_id} | {submission.review_status}
+                      </p>
+                    </div>
+                    <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>
+                  </article>
+                ))}
+                {!submissions.length ? <p className="feedback">No submissions yet.</p> : null}
+              </div>
+            </section>
           </aside>
         </div>
       </section>

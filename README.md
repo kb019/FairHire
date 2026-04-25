@@ -49,5 +49,7 @@ npm run dev:frontend
 
 - Job posting analysis now supports an OpenAI-backed path when `OPENAI_API_KEY` is set. Without it, the app falls back to the local heuristic detector.
 - `OPENAI_ANALYSIS_MODEL` defaults to `gpt-5.4-mini` and can be overridden in `.env`.
-- The current parser/redactor is still heuristic and intended as a working baseline, not a production-grade fairness model.
+- Resume parsing now also supports an OpenAI-backed path when `OPENAI_API_KEY` is set. Without it, the app falls back to the local heuristic parser.
+- `OPENAI_RESUME_PARSER_MODEL` defaults to `gpt-5.4-mini` and can be overridden in `.env`.
+- The redactor is still partly heuristic and intended as a working baseline, not a production-grade fairness model.
 - Automated tests are still missing; the repo is currently verified by TypeScript checks and production builds.
