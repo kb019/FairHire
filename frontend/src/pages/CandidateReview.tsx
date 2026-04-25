@@ -182,7 +182,7 @@ export function CandidateReviewPage() {
             </div>
             <div className="candidate-list">
               {candidates.map((candidate) => {
-                const isSelected = selectedCandidate?.anonymous_id === candidate.anonymous_id;
+                const isSelected = selectedCandidate?.id === candidate.id;
                 const statusTone = getStatusTone(candidate.review_status);
                 const revealedContact = contactInfo[candidate.anonymous_id];
 

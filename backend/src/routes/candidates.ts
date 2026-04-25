@@ -42,6 +42,7 @@ candidatesRouter.get(
     const result = await query(
       `
         SELECT
+          DISTINCT ON (resumes.anonymous_id)
           resumes.id,
           resumes.anonymous_id,
           resumes.review_status,
@@ -55,7 +56,7 @@ candidatesRouter.get(
           ) AS contact_revealed
         FROM resumes
         WHERE resumes.job_posting_id = $1
-        ORDER BY resumes.submitted_at DESC
+        ORDER BY resumes.anonymous_id, resumes.submitted_at DESC
       `,
       [jobPostingId]
     );
