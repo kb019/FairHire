@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { Shell } from "../components/Shell";
 import { getJobPostingCategoryLabel, jobPostingCategories } from "../constants/jobPostingCategories";
@@ -7,9 +7,12 @@ interface Issue {
   id: string;
   type: string;
   severity: "critical" | "warning" | "suggestion";
+  text_offset_start: number;
+  text_offset_end: number;
   flagged_text: string;
   explanation: string;
   suggestion: string;
+  educational_link: string;
   acknowledged: boolean;
   acknowledgement_note: string | null;
 }
@@ -48,16 +51,122 @@ function formatIssueType(type: string) {
   return type.split("_").join(" ");
 }
 
+function findIssueRange(content: string, issue: Issue) {
+  if (!issue.flagged_text) {
+    return null;
+  }
+
+  const offsetStart = Math.max(0, issue.text_offset_start ?? 0);
+  const offsetEnd = Math.max(offsetStart, issue.text_offset_end ?? offsetStart);
+  const currentSlice = content.slice(offsetStart, offsetEnd);
+
+  if (currentSlice.toLowerCase() === issue.flagged_text.toLowerCase()) {
+    return { start: offsetStart, end: offsetEnd };
+  }
+
+  const fallbackIndex = content.toLowerCase().indexOf(issue.flagged_text.toLowerCase());
+
+  if (fallbackIndex >= 0) {
+    return {
+      start: fallbackIndex,
+      end: fallbackIndex + issue.flagged_text.length,
+    };
+  }
+
+  return null;
+}
+
+function cleanupEditedContent(value: string) {
+  return value
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+\n/g, "\n");
+}
+
+function getQuickReplacement(issue: Issue) {
+  const flagged = issue.flagged_text.trim().toLowerCase();
+
+  if (issue.type === "gendered_language") {
+    const map: Record<string, string> = {
+      rockstar: "specialist",
+      ninja: "expert",
+      manpower: "team capacity",
+      dominant: "strong",
+      "competitive warrior": "collaborative professional",
+    };
+
+    return map[flagged] ?? "qualified professional";
+  }
+
+  if (issue.type === "age_language") {
+    const map: Record<string, string> = {
+      "recent graduate": "early-career candidate",
+      "digital native": "comfortable with digital tools",
+      young: "motivated",
+      "energetic team": "collaborative team",
+    };
+
+    return map[flagged] ?? "qualified candidate";
+  }
+
+  if (issue.type === "cultural_exclusion") {
+    const map: Record<string, string> = {
+      "native english speaker": "strong written and verbal communication skills",
+      "cultural fit": "ability to collaborate across teams",
+      "american-born": "authorized to work in the required location",
+    };
+
+    return map[flagged] ?? "clear role-relevant collaboration requirements";
+  }
+
+  if (issue.type === "disability_exclusion") {
+    return "able to perform the essential functions of the role with or without reasonable accommodation";
+  }
+
+  if (issue.type === "missing_eeo") {
+    return "We are an equal opportunity employer and welcome applicants from all backgrounds.";
+  }
+
+  if (issue.type === "exclusionary_requirement") {
+    const technologyMatch = issue.flagged_text.match(/(?:with|in)\s+([A-Za-z0-9.+#-]+)/i);
+    const technology = technologyMatch?.[1];
+
+    return technology
+      ? `Demonstrated experience with ${technology} in production environments`
+      : "Demonstrated experience relevant to the tools and responsibilities in this role";
+  }
+
+  if (issue.type === "compensation_opacity") {
+    return "Include a clear compensation range for the role.";
+  }
+
+  if (issue.type === "credential_inflation") {
+    return "Equivalent practical experience will also be considered.";
+  }
+
+  return "";
+}
+
+function getSuggestedRewrite(issue: Issue) {
+  return (
+    getQuickReplacement(issue) ||
+    issue.suggestion ||
+    "Rewrite this language in a more inclusive and job-relevant way."
+  );
+}
+
 export function JobPostingEditorPage() {
   const [form, setForm] = useState(initialForm);
   const [score, setScore] = useState(100);
   const [issues, setIssues] = useState<Issue[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [dismissedSuggestionIds, setDismissedSuggestionIds] = useState<string[]>([]);
   const [savedPostingId, setSavedPostingId] = useState("");
   const [analysisError, setAnalysisError] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
   const [saveError, setSaveError] = useState("");
   const [busy, setBusy] = useState(false);
+  const descriptionRef = useRef<HTMLTextAreaElement | null>(null);
   const scoreTone = getScoreTone(score);
   const issueCounts = issues.reduce(
     (totals, issue) => {
@@ -73,6 +182,7 @@ export function JobPostingEditorPage() {
       setScore(100);
       setIssues([]);
       setIsAnalyzing(false);
+      setDismissedSuggestionIds([]);
       setAnalysisError("");
       return;
     }
@@ -85,6 +195,7 @@ export function JobPostingEditorPage() {
         });
         setScore(response.data.score);
         setIssues(response.data.issues);
+        setDismissedSuggestionIds([]);
         setAnalysisError("");
       } catch (error: any) {
         setAnalysisError(error.response?.data?.error ?? "Live analysis unavailable.");
@@ -108,6 +219,7 @@ export function JobPostingEditorPage() {
       const response = await api.post("/job-postings", form);
       setSavedPostingId(response.data.id);
       setIssues(response.data.issues);
+      setDismissedSuggestionIds([]);
       setScore(response.data.score);
       setSaveMessage(`Job posting saved with compliance score ${response.data.score}.`);
     } catch (error: any) {
@@ -134,11 +246,82 @@ export function JobPostingEditorPage() {
         { justification }
       );
       setIssues(response.data.issues);
+      setDismissedSuggestionIds([]);
       setScore(response.data.score);
       setSaveMessage(`Issue acknowledged. Updated compliance score ${response.data.score}.`);
     } catch (error: any) {
       setSaveError(error.response?.data?.error ?? "Could not acknowledge issue.");
     }
+  }
+
+  function applyContentUpdate(nextContent: string, selectionStart?: number, selectionEnd?: number) {
+    setForm((current) => ({ ...current, content: nextContent }));
+    setSaveError("");
+    setAnalysisError("");
+    setSaveMessage("Draft updated. Bias analysis will refresh automatically.");
+
+    if (typeof selectionStart === "number") {
+      requestAnimationFrame(() => {
+        const textarea = descriptionRef.current;
+
+        if (!textarea) {
+          return;
+        }
+
+        textarea.focus();
+        textarea.setSelectionRange(selectionStart, selectionEnd ?? selectionStart);
+      });
+    }
+  }
+
+  function acceptIssueSuggestion(issue: Issue) {
+    const replacement = getSuggestedRewrite(issue);
+
+    if (!issue.flagged_text) {
+      const nextContent = `${form.content.trim()}\n\n${replacement}`.trim();
+      applyContentUpdate(nextContent, nextContent.length, nextContent.length);
+      return;
+    }
+
+    const range = findIssueRange(form.content, issue);
+
+    if (!range) {
+      setSaveError("Could not find the flagged text in the current draft.");
+      return;
+    }
+
+    const nextContent = `${form.content.slice(0, range.start)}${replacement}${form.content.slice(range.end)}`;
+    applyContentUpdate(nextContent, range.start, range.start + replacement.length);
+  }
+
+  function modifyIssueText(issue: Issue) {
+    const initialValue = getSuggestedRewrite(issue) || issue.flagged_text || "";
+    const replacement = window.prompt("Edit the replacement text for this issue.", initialValue)?.trim();
+
+    if (!replacement) {
+      return;
+    }
+
+    if (!issue.flagged_text) {
+      const nextContent = `${form.content.trim()}\n\n${replacement}`.trim();
+      applyContentUpdate(nextContent, nextContent.length, nextContent.length);
+      return;
+    }
+
+    const range = findIssueRange(form.content, issue);
+
+    if (!range) {
+      setSaveError("Could not find the flagged text in the current draft.");
+      return;
+    }
+
+    const nextContent = `${form.content.slice(0, range.start)}${replacement}${form.content.slice(range.end)}`;
+    applyContentUpdate(nextContent, range.start, range.start + replacement.length);
+  }
+
+  function rejectSuggestion(issueId: string) {
+    setDismissedSuggestionIds((current) => (current.includes(issueId) ? current : [...current, issueId]));
+    setSaveMessage("Suggestion dismissed for this draft.");
   }
 
   return (
@@ -277,6 +460,7 @@ export function JobPostingEditorPage() {
               <label className="field field--editor">
                 <span>Job description</span>
                 <textarea
+                  ref={descriptionRef}
                   placeholder="Example: We are hiring a Senior Product Designer to lead end-to-end design for our employer workflow platform..."
                   rows={18}
                   value={form.content}
@@ -375,7 +559,39 @@ export function JobPostingEditorPage() {
                     </div>
                     <h2>{issue.flagged_text ? `"${issue.flagged_text}"` : "Missing inclusive element"}</h2>
                     <p>{issue.explanation}</p>
-                    <p className="issue-card__suggestion">{issue.suggestion}</p>
+                    {!dismissedSuggestionIds.includes(issue.id) ? (
+                      <>
+                        <div className="issue-card__rewrite">
+                          <span className="issue-card__rewrite-label">Suggested rewrite</span>
+                          <p className="issue-card__suggestion">{getSuggestedRewrite(issue)}</p>
+                        </div>
+                        <div className="actions actions--compact">
+                          <button
+                            className="button"
+                            onClick={() => acceptIssueSuggestion(issue)}
+                            type="button"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            className="button button--ghost"
+                            onClick={() => modifyIssueText(issue)}
+                            type="button"
+                          >
+                            Modify
+                          </button>
+                          <button
+                            className="button button--ghost"
+                            onClick={() => rejectSuggestion(issue.id)}
+                            type="button"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      <p className="feedback">Suggestion dismissed for this draft.</p>
+                    )}
                     {savedPostingId && !issue.acknowledged ? (
                       <div className="actions actions--compact">
                         <button
