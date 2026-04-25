@@ -37,30 +37,35 @@ export function Shell({ title, children }: ShellProps) {
   return (
     <div className="app-shell">
       <header className="hero">
-        <div className="hero__content">
-          <Link className="hero__eyebrow" to="/">
-            Ethics Hiring Tracker
+        <div className="hero__bar">
+          <Link className="hero__brand" to="/">
+            <span className="hero__eyebrow">Ethics Hiring Tracker</span>
+            <span className="hero__brand-mark">Fair posting workspace</span>
           </Link>
-          <h1>{title}</h1>
-          <p>
-            Bias gets designed out of the workflow before hiring decisions are made.
-          </p>
+          <nav className="hero__nav">
+            {navigation.map((item) => (
+              <NavLink
+                key={item.to}
+                className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}
+                to={item.to}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+            {token ? (
+              <button className="nav-link nav-link--button" onClick={handleLogout} type="button">
+                Logout
+              </button>
+            ) : null}
+          </nav>
         </div>
         <nav className="hero__nav">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.to}
-              className={({ isActive }) => (isActive ? "nav-link nav-link--active" : "nav-link")}
-              to={item.to}
-            >
-              {item.label}
-            </NavLink>
-          ))}
-          {token ? (
-            <button className="nav-link nav-link--button" onClick={handleLogout} type="button">
-              Logout
-            </button>
-          ) : null}
+          <div className="hero__content">
+            <h1>{title}</h1>
+            <p>
+              Bias gets designed out of the workflow before hiring decisions are made.
+            </p>
+          </div>
         </nav>
       </header>
       <main className="page">{children}</main>

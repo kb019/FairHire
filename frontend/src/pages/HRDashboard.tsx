@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Shell } from "../components/Shell";
+import { getJobPostingCategoryLabel } from "../constants/jobPostingCategories";
 
 interface JobPosting {
   id: string;
   title: string;
+  industry_category: string;
   status: string;
   compliance_score: number;
   updated_at: string;
@@ -82,8 +84,8 @@ export function HRDashboardPage() {
             <article className="card">
               <span className="card__label">Issue mix</span>
               <p>
-                Critical {overview.totalIssuesBySeverity.critical} · Warning{" "}
-                {overview.totalIssuesBySeverity.warning} · Suggestion{" "}
+                Critical {overview.totalIssuesBySeverity.critical} | Warning{" "}
+                {overview.totalIssuesBySeverity.warning} | Suggestion{" "}
                 {overview.totalIssuesBySeverity.suggestion}
               </p>
             </article>
@@ -101,7 +103,8 @@ export function HRDashboardPage() {
               <div>
                 <h2>{posting.title}</h2>
                 <p>
-                  {posting.status} · score {posting.compliance_score}
+                  {getJobPostingCategoryLabel(posting.industry_category)} | {posting.status} | score{" "}
+                  {posting.compliance_score}
                 </p>
               </div>
               <div className="stack">

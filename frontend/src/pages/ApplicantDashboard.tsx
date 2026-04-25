@@ -1,15 +1,24 @@
 import { FormEvent, useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Shell } from "../components/Shell";
+import { getJobPostingCategoryLabel } from "../constants/jobPostingCategories";
+
+interface PublicJobPosting {
+  id: string;
+  title: string;
+  industry_category: string;
+  location: string | null;
+}
 
 export function ApplicantDashboardPage() {
-  const [jobPostings, setJobPostings] = useState<any[]>([]);
+  const [jobPostings, setJobPostings] = useState<PublicJobPosting[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [selectedJobPostingId, setSelectedJobPostingId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const selectedPosting = jobPostings.find((posting) => posting.id === selectedJobPostingId) ?? null;
 
   useEffect(() => {
     api.get("/job-postings/public").then((response) => {
@@ -66,11 +75,17 @@ export function ApplicantDashboardPage() {
               >
                 {jobPostings.map((posting) => (
                   <option key={posting.id} value={posting.id}>
-                    {posting.title}
+                    {posting.title} - {getJobPostingCategoryLabel(posting.industry_category)}
                   </option>
                 ))}
               </select>
             </label>
+            {selectedPosting ? (
+              <p className="feedback">
+                {getJobPostingCategoryLabel(selectedPosting.industry_category)}
+                {selectedPosting.location ? ` | ${selectedPosting.location}` : ""}
+              </p>
+            ) : null}
             <label className="field">
               <span>Resume file</span>
               <input
@@ -93,7 +108,7 @@ export function ApplicantDashboardPage() {
                   <div>
                     <strong>{submission.title}</strong>
                     <p>
-                      {submission.anonymous_id} · {submission.review_status}
+                      {submission.anonymous_id} | {submission.review_status}
                     </p>
                   </div>
                   <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>

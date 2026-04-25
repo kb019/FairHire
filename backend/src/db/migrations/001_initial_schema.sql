@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS job_postings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   hr_user_id UUID NOT NULL REFERENCES hr_users(id),
   title VARCHAR(255) NOT NULL,
+  industry_category VARCHAR(80) NOT NULL DEFAULT 'general_business',
   department VARCHAR(255),
   location VARCHAR(255),
   employment_type VARCHAR(50),

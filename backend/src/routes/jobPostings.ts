@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { analyzeJobPosting } from "../analyzer/jobPostingAnalyzer.js";
 import { calculateComplianceScore } from "../analyzer/scoreCalculator.js";
+import { validJobPostingCategories, type JobPostingCategory } from "../constants/jobPostingCategories.js";
 import { query } from "../db/client.js";
 import { requireAuth, requireHr } from "../middleware/auth.js";
 import type { Issue } from "../types/api.js";
@@ -9,12 +10,18 @@ import { buildEthicsReportPdf } from "../utils/report.js";
 
 interface JobPostingInput {
   title: string;
+  industryCategory?: string;
   department?: string;
   location?: string;
   employmentType?: string;
   compensationRange?: string;
   content: string;
   status?: string;
+}
+
+function normalizeIndustryCategory(value: string | undefined): JobPostingCategory {
+  const normalized = String(value ?? "general_business").trim() as JobPostingCategory;
+  return validJobPostingCategories.has(normalized) ? normalized : "general_business";
 }
 
 async function verifyOwnership(jobPostingId: string, hrUserId: string) {
@@ -33,7 +40,7 @@ jobPostingsRouter.get(
   asyncHandler(async (_req, res) => {
     const result = await query(
       `
-        SELECT id, title, department, location, employment_type, compensation_range, compliance_score, created_at
+        SELECT id, title, industry_category, department, location, employment_type, compensation_range, compliance_score, created_at
         FROM job_postings
         WHERE status <> 'archived'
         ORDER BY created_at DESC
@@ -51,7 +58,7 @@ jobPostingsRouter.get(
   asyncHandler(async (req, res) => {
     const result = await query(
       `
-        SELECT id, title, department, location, employment_type, compensation_range, status, compliance_score, created_at, updated_at
+        SELECT id, title, industry_category, department, location, employment_type, compensation_range, status, compliance_score, created_at, updated_at
         FROM job_postings
         WHERE hr_user_id = $1
         ORDER BY updated_at DESC
@@ -68,6 +75,7 @@ jobPostingsRouter.post(
   asyncHandler(async (req, res) => {
     const body = req.body as JobPostingInput;
     const title = String(body.title ?? "").trim();
+    const industryCategory = normalizeIndustryCategory(body.industryCategory);
     const content = String(body.content ?? "").trim();
 
     if (!title || !content) {
@@ -81,6 +89,7 @@ jobPostingsRouter.post(
         INSERT INTO job_postings (
           hr_user_id,
           title,
+          industry_category,
           department,
           location,
           employment_type,
@@ -89,12 +98,13 @@ jobPostingsRouter.post(
           status,
           compliance_score
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id
       `,
       [
         req.user!.userId,
         title,
+        industryCategory,
         body.department ?? null,
         body.location ?? null,
         body.employmentType ?? null,
@@ -138,7 +148,7 @@ jobPostingsRouter.get(
 
     const postingResult = await query(
       `
-        SELECT id, title, department, location, employment_type, compensation_range, content, status, compliance_score, created_at, updated_at
+        SELECT id, title, industry_category, department, location, employment_type, compensation_range, content, status, compliance_score, created_at, updated_at
         FROM job_postings
         WHERE id = $1
       `,
@@ -176,6 +186,7 @@ jobPostingsRouter.put(
 
     const body = req.body as JobPostingInput;
     const title = String(body.title ?? "").trim();
+    const industryCategory = normalizeIndustryCategory(body.industryCategory);
     const content = String(body.content ?? "").trim();
 
     if (!title || !content) {
@@ -190,19 +201,21 @@ jobPostingsRouter.put(
         UPDATE job_postings
         SET
           title = $2,
-          department = $3,
-          location = $4,
-          employment_type = $5,
-          compensation_range = $6,
-          content = $7,
-          status = $8,
-          compliance_score = $9,
+          industry_category = $3,
+          department = $4,
+          location = $5,
+          employment_type = $6,
+          compensation_range = $7,
+          content = $8,
+          status = $9,
+          compliance_score = $10,
           updated_at = now()
         WHERE id = $1
       `,
       [
         jobPostingId,
         title,
+        industryCategory,
         body.department ?? null,
         body.location ?? null,
         body.employmentType ?? null,
