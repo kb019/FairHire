@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { analyzeCandidateFit } from "../analyzer/candidateFitSnapshot.js";
 import { contactDisclosurePool, query } from "../db/client.js";
 import { requireAuth, requireHr } from "../middleware/auth.js";
 import type { RedactedResume } from "../types/api.js";
@@ -87,8 +88,21 @@ candidatesRouter.get(
 
     const result = await query(
       `
-        SELECT id, anonymous_id, redacted_content, review_status, submitted_at
+        SELECT
+          resumes.id,
+          resumes.anonymous_id,
+          resumes.redacted_content,
+          resumes.review_status,
+          resumes.submitted_at,
+          job_postings.title,
+          job_postings.industry_category,
+          job_postings.department,
+          job_postings.location,
+          job_postings.employment_type,
+          job_postings.compensation_range,
+          job_postings.content
         FROM resumes
+        INNER JOIN job_postings ON job_postings.id = resumes.job_posting_id
         WHERE job_posting_id = $1 AND anonymous_id = $2
         ORDER BY submitted_at DESC
         LIMIT 1
@@ -101,9 +115,28 @@ candidatesRouter.get(
       return;
     }
 
+    const row = result.rows[0] as any;
+    const redactedContent = sanitizeCandidateResumeForReview(row.redacted_content as RedactedResume);
+    const fitSnapshot = await analyzeCandidateFit(
+      {
+        title: row.title,
+        industryCategory: row.industry_category,
+        department: row.department,
+        location: row.location,
+        employmentType: row.employment_type,
+        compensationRange: row.compensation_range,
+        content: row.content,
+      },
+      redactedContent
+    );
+
     res.json({
-      ...result.rows[0],
-      redacted_content: sanitizeCandidateResumeForReview(result.rows[0].redacted_content as RedactedResume),
+      id: row.id,
+      anonymous_id: row.anonymous_id,
+      review_status: row.review_status,
+      submitted_at: row.submitted_at,
+      redacted_content: redactedContent,
+      fit_snapshot: fitSnapshot,
     });
   })
 );

@@ -18,6 +18,14 @@ interface CandidateDetail {
   anonymous_id: string;
   review_status: string;
   submitted_at: string;
+  fit_snapshot: {
+    score: number;
+    experience_alignment: "strong" | "moderate" | "limited";
+    fit_summary: string;
+    matched_skills: string[];
+    missing_requirements: string[];
+    standout_signals: string[];
+  };
   redacted_content: {
     summary: string;
     skills: string[];
@@ -57,6 +65,30 @@ function getStatusTone(status: string) {
   }
 
   return "neutral";
+}
+
+function getAlignmentTone(value: "strong" | "moderate" | "limited") {
+  if (value === "strong") {
+    return "good";
+  }
+
+  if (value === "limited") {
+    return "bad";
+  }
+
+  return "neutral";
+}
+
+function formatExperienceAlignment(value: "strong" | "moderate" | "limited") {
+  if (value === "strong") {
+    return "Strong";
+  }
+
+  if (value === "limited") {
+    return "Limited";
+  }
+
+  return "Moderate";
 }
 
 export function CandidateReviewPage() {
@@ -253,6 +285,10 @@ export function CandidateReviewPage() {
 
                 <div className="candidate-overview-grid">
                   <article className="candidate-overview-card">
+                    <span>Fit score</span>
+                    <strong>{selectedCandidate.fit_snapshot.score}</strong>
+                  </article>
+                  <article className="candidate-overview-card">
                     <span>Skills</span>
                     <strong>{selectedCandidate.redacted_content.skills.length}</strong>
                   </article>
@@ -269,6 +305,65 @@ export function CandidateReviewPage() {
                     <strong>{selectedCandidate.redacted_content.certifications.length}</strong>
                   </article>
                 </div>
+
+                <section className="candidate-section-card candidate-section-card--fit">
+                  <div className="candidate-section-card__header">
+                    <div>
+                      <h3>Fit snapshot</h3>
+                      <p>{selectedCandidate.fit_snapshot.fit_summary}</p>
+                    </div>
+                    <span
+                      className={`status-pill status-pill--${getAlignmentTone(
+                        selectedCandidate.fit_snapshot.experience_alignment
+                      )}`}
+                    >
+                      {formatExperienceAlignment(selectedCandidate.fit_snapshot.experience_alignment)} alignment
+                    </span>
+                  </div>
+
+                  <div className="candidate-fit-grid">
+                    <article className="candidate-fit-card">
+                      <span>Matched skills</span>
+                      <div className="candidate-chip-list">
+                        {selectedCandidate.fit_snapshot.matched_skills.length ? (
+                          selectedCandidate.fit_snapshot.matched_skills.map((skill) => (
+                            <span className="candidate-chip" key={skill}>
+                              {skill}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="candidate-chip candidate-chip--muted">No direct matches identified</span>
+                        )}
+                      </div>
+                    </article>
+
+                    <article className="candidate-fit-card">
+                      <span>Missing requirements</span>
+                      <div className="candidate-chip-list">
+                        {selectedCandidate.fit_snapshot.missing_requirements.length ? (
+                          selectedCandidate.fit_snapshot.missing_requirements.map((item) => (
+                            <span className="candidate-chip candidate-chip--muted" key={item}>
+                              {item}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="candidate-chip candidate-chip--muted">No clear gaps identified</span>
+                        )}
+                      </div>
+                    </article>
+                  </div>
+
+                  <div className="candidate-fit-signals">
+                    <span>Standout signals</span>
+                    <ul className="candidate-fit-list">
+                      {selectedCandidate.fit_snapshot.standout_signals.length ? (
+                        selectedCandidate.fit_snapshot.standout_signals.map((item) => <li key={item}>{item}</li>)
+                      ) : (
+                        <li>No standout signals captured.</li>
+                      )}
+                    </ul>
+                  </div>
+                </section>
 
                 <section className="candidate-section-card">
                   <div className="candidate-section-card__header">

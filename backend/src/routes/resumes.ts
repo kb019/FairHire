@@ -26,7 +26,29 @@ resumesRouter.get(
   asyncHandler(async (req, res) => {
     const result = await query(
       `
-        SELECT resumes.id, resumes.job_posting_id, resumes.anonymous_id, resumes.submitted_at, resumes.review_status, resumes.status, job_postings.title
+        SELECT
+          resumes.id,
+          resumes.job_posting_id,
+          resumes.anonymous_id,
+          resumes.submitted_at,
+          resumes.review_status,
+          resumes.status,
+          job_postings.title,
+          job_postings.industry_category,
+          job_postings.department,
+          job_postings.location,
+          job_postings.employment_type,
+          job_postings.compensation_range,
+          CASE
+            WHEN char_length(job_postings.content) > 220 THEN LEFT(job_postings.content, 220) || '...'
+            ELSE job_postings.content
+          END AS posting_excerpt,
+          EXISTS (
+            SELECT 1
+            FROM contact_disclosure_log
+            WHERE contact_disclosure_log.job_posting_id = resumes.job_posting_id
+              AND contact_disclosure_log.anonymous_id = resumes.anonymous_id
+          ) AS contact_requested
         FROM resumes
         INNER JOIN job_postings ON job_postings.id = resumes.job_posting_id
         WHERE resumes.applicant_id = $1
@@ -117,4 +139,3 @@ resumesRouter.post(
     });
   })
 );
-

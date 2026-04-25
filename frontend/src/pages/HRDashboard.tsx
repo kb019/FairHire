@@ -70,91 +70,128 @@ export function HRDashboardPage() {
 
   return (
     <Shell title="HR dashboard">
-      <section className="panel panel--wide">
-        {overview ? (
-          <div className="stats-grid">
-            <article className="card">
-              <span className="card__label">Average score</span>
-              <h2>{overview.averageScore ?? "N/A"}</h2>
-            </article>
-            <article className="card">
-              <span className="card__label">Open postings</span>
-              <h2>{overview.totalJobPostings}</h2>
-            </article>
-            <article className="card">
-              <span className="card__label">Issue mix</span>
-              <p>
-                Critical {overview.totalIssuesBySeverity.critical} | Warning{" "}
-                {overview.totalIssuesBySeverity.warning} | Suggestion{" "}
-                {overview.totalIssuesBySeverity.suggestion}
-              </p>
-            </article>
-          </div>
-        ) : null}
-        <div className="actions">
-          <Link className="button" to="/hr/editor">
-            Create new posting
-          </Link>
-        </div>
-        {error ? <p className="feedback feedback--error">{error}</p> : null}
-        <div className="list">
-          {postings.map((posting) => (
-            <article className="list-item" key={posting.id}>
-              <div>
-                <h2>{posting.title}</h2>
-                <p>
-                  {getJobPostingCategoryLabel(posting.industry_category)} | {posting.status} | score{" "}
-                  {posting.compliance_score}
-                </p>
+      <section className="panel panel--wide workspace-shell">
+        <div className="workspace-grid">
+          <div className="workspace-primary">
+            <section className="workspace-panel workspace-panel--hero">
+              <div className="workspace-panel__header">
+                <div>
+                  <span className="section-kicker">Hiring operations</span>
+                  <h2>Active job postings</h2>
+                  <p>Track compliance health, keep job content clean, and move into anonymous review from one place.</p>
+                </div>
+                <Link className="button" to="/hr/editor">
+                  Create new posting
+                </Link>
               </div>
-              <div className="stack">
-                <span>{new Date(posting.updated_at).toLocaleString()}</span>
-                <div className="actions actions--compact">
-                  <Link className="button button--ghost" to={`/hr/job-postings/${posting.id}`}>
-                    Review candidates
-                  </Link>
-                  <button
-                    className="button button--ghost"
-                    disabled={downloadingReportId === posting.id}
-                    onClick={() => void downloadReport(posting.id)}
-                    type="button"
-                  >
-                    {downloadingReportId === posting.id ? "Downloading..." : "Report"}
-                  </button>
+              {overview ? (
+                <div className="workspace-stat-grid">
+                  <article className="workspace-stat-card">
+                    <span>Average score</span>
+                    <strong>{overview.averageScore ?? "N/A"}</strong>
+                  </article>
+                  <article className="workspace-stat-card">
+                    <span>Open postings</span>
+                    <strong>{overview.totalJobPostings}</strong>
+                  </article>
+                  <article className="workspace-stat-card">
+                    <span>Critical issues</span>
+                    <strong>{overview.totalIssuesBySeverity.critical}</strong>
+                  </article>
+                  <article className="workspace-stat-card">
+                    <span>Warnings</span>
+                    <strong>{overview.totalIssuesBySeverity.warning}</strong>
+                  </article>
+                </div>
+              ) : null}
+            </section>
+
+            <section className="workspace-panel">
+              <div className="workspace-panel__header">
+                <div>
+                  <span className="section-kicker">Posting queue</span>
+                  <h2>Current roles</h2>
                 </div>
               </div>
-            </article>
-          ))}
-          {!postings.length && !error ? (
-            <p className="feedback">No job postings yet. Create the first one to start analysis.</p>
-          ) : null}
+              {error ? <p className="feedback feedback--error">{error}</p> : null}
+              <div className="workspace-list">
+                {postings.map((posting) => (
+                  <article className="workspace-list-card" key={posting.id}>
+                    <div className="workspace-list-card__top">
+                      <div>
+                        <strong>{posting.title}</strong>
+                        <p>{getJobPostingCategoryLabel(posting.industry_category)}</p>
+                      </div>
+                      <div className="workspace-list-card__meta">
+                        <span className="workspace-badge">Score {posting.compliance_score}</span>
+                        <span className="workspace-badge workspace-badge--muted">{posting.status}</span>
+                      </div>
+                    </div>
+                    <div className="workspace-list-card__footer">
+                      <span>Updated {new Date(posting.updated_at).toLocaleString()}</span>
+                      <div className="actions actions--compact">
+                        <Link className="button button--ghost" to={`/hr/job-postings/${posting.id}`}>
+                          Review candidates
+                        </Link>
+                        <button
+                          className="button button--ghost"
+                          disabled={downloadingReportId === posting.id}
+                          onClick={() => void downloadReport(posting.id)}
+                          type="button"
+                        >
+                          {downloadingReportId === posting.id ? "Downloading..." : "Report"}
+                        </button>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+                {!postings.length && !error ? (
+                  <p className="feedback">No job postings yet. Create the first one to start analysis.</p>
+                ) : null}
+              </div>
+            </section>
+          </div>
+
+          <aside className="workspace-sidebar">
+            {topIssues.length ? (
+              <section className="workspace-panel">
+                <div className="workspace-panel__header">
+                  <div>
+                    <span className="section-kicker">Issue patterns</span>
+                    <h2>Top issue types</h2>
+                  </div>
+                </div>
+                <div className="workspace-mini-list">
+                  {topIssues.map((issue) => (
+                    <article className="workspace-mini-item" key={issue.type}>
+                      <strong>{issue.type.split("_").join(" ")}</strong>
+                      <span>{issue.count}</span>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+
+            {trends.length ? (
+              <section className="workspace-panel">
+                <div className="workspace-panel__header">
+                  <div>
+                    <span className="section-kicker">Trendline</span>
+                    <h2>Score trend</h2>
+                  </div>
+                </div>
+                <div className="workspace-mini-list">
+                  {trends.map((point) => (
+                    <article className="workspace-mini-item" key={point.bucket}>
+                      <strong>{new Date(point.bucket).toLocaleDateString()}</strong>
+                      <span>{point.average_score}</span>
+                    </article>
+                  ))}
+                </div>
+              </section>
+            ) : null}
+          </aside>
         </div>
-        {topIssues.length ? (
-          <div className="subpanel">
-            <h2>Top issue types</h2>
-            <div className="list">
-              {topIssues.map((issue) => (
-                <article className="list-item" key={issue.type}>
-                  <strong>{issue.type.split("_").join(" ")}</strong>
-                  <span>{issue.count}</span>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
-        {trends.length ? (
-          <div className="subpanel">
-            <h2>Score trend</h2>
-            <div className="list">
-              {trends.map((point) => (
-                <article className="list-item" key={point.bucket}>
-                  <strong>{new Date(point.bucket).toLocaleDateString()}</strong>
-                  <span>{point.average_score}</span>
-                </article>
-              ))}
-            </div>
-          </div>
-        ) : null}
       </section>
     </Shell>
   );

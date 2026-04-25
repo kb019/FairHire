@@ -14,9 +14,62 @@ interface PublicJobPosting {
   content: string;
 }
 
+interface SubmissionTrackerItem {
+  id: string;
+  job_posting_id: string;
+  anonymous_id: string;
+  submitted_at: string;
+  review_status: string;
+  status: string;
+  title: string;
+  industry_category: string;
+  department: string | null;
+  location: string | null;
+  employment_type: string | null;
+  compensation_range: string | null;
+  posting_excerpt: string;
+  contact_requested: boolean;
+}
+
+function formatReviewStatus(status: string) {
+  if (status === "shortlisted") {
+    return "Shortlisted";
+  }
+
+  if (status === "rejected") {
+    return "Rejected";
+  }
+
+  return "Submitted";
+}
+
+function getStatusTone(status: string) {
+  if (status === "shortlisted") {
+    return "good";
+  }
+
+  if (status === "rejected") {
+    return "bad";
+  }
+
+  return "neutral";
+}
+
+function formatProcessingStatus(status: string) {
+  if (status === "processed") {
+    return "Processed";
+  }
+
+  if (status === "pending") {
+    return "Pending";
+  }
+
+  return status ? `${status.charAt(0).toUpperCase()}${status.slice(1)}` : "Unknown";
+}
+
 export function ApplicantDashboardPage() {
   const [jobPostings, setJobPostings] = useState<PublicJobPosting[]>([]);
-  const [submissions, setSubmissions] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<SubmissionTrackerItem[]>([]);
   const [selectedJobPostingId, setSelectedJobPostingId] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [message, setMessage] = useState("");
@@ -67,132 +120,175 @@ export function ApplicantDashboardPage() {
   }
 
   return (
-    <Shell title="Applicant dashboard">
-      <section className="panel panel--wide">
-        <div className="applicant-dashboard-layout">
-          <form className="panel form-panel applicant-apply-panel" onSubmit={handleSubmit}>
-            <label className="field">
-              <span>Job posting</span>
-              <select
-                value={selectedJobPostingId}
-                onChange={(event) => setSelectedJobPostingId(event.target.value)}
-              >
-                {jobPostings.map((posting) => (
-                  <option key={posting.id} value={posting.id}>
-                    {posting.title} - {getJobPostingCategoryLabel(posting.industry_category)}
-                  </option>
-                ))}
-              </select>
-            </label>
+    <Shell title="Job opportunities">
+      <section className="panel panel--wide recruiting-shell">
+        <div className="recruiting-toolbar">
+          <div>
+            <span className="section-kicker">Candidate portal</span>
+            <h2>Explore roles, review details, and apply with one resume workflow.</h2>
+          </div>
+          <div className="recruiting-toolbar__stats">
+            <span className="workspace-badge">{jobPostings.length} open roles</span>
+            <span className="workspace-badge workspace-badge--muted">{submissions.length} applications</span>
+          </div>
+        </div>
+
+        <div className="recruiting-browser">
+          <aside className="jobs-rail">
+            <div className="jobs-rail__header">
+              <span className="section-kicker">Open positions</span>
+              <h3>Available jobs</h3>
+            </div>
+            <div className="jobs-rail__list">
+              {jobPostings.map((posting) => {
+                const isSelected = posting.id === selectedJobPostingId;
+
+                return (
+                  <button
+                    className={isSelected ? "job-rail-card job-rail-card--selected" : "job-rail-card"}
+                    key={posting.id}
+                    onClick={() => setSelectedJobPostingId(posting.id)}
+                    type="button"
+                  >
+                    <div className="job-rail-card__top">
+                      <strong>{posting.title}</strong>
+                      <span className="workspace-badge workspace-badge--muted">
+                        {getJobPostingCategoryLabel(posting.industry_category)}
+                      </span>
+                    </div>
+                    <div className="job-rail-card__meta">
+                      <span>{posting.department || "Department not listed"}</span>
+                      <span>{posting.location || "Location not listed"}</span>
+                    </div>
+                    <div className="job-rail-card__footer">
+                      <span>{posting.compensation_range || "Compensation not listed"}</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+
+          <section className="job-detail-stage">
             {selectedPosting ? (
-              <div className="applicant-job-meta">
-                <span className="candidate-chip candidate-chip--muted">
-                  {getJobPostingCategoryLabel(selectedPosting.industry_category)}
-                </span>
-                {selectedPosting.department ? (
-                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.department}</span>
-                ) : null}
-                {selectedPosting.location ? (
-                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.location}</span>
-                ) : null}
-                {selectedPosting.compensation_range ? (
-                  <span className="candidate-chip candidate-chip--muted">{selectedPosting.compensation_range}</span>
-                ) : null}
-              </div>
-            ) : null}
-            <label className="field">
-              <span>Resume file</span>
-              <input
-                accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                type="file"
-              />
-            </label>
-            {message ? <p className="feedback feedback--success">{message}</p> : null}
-            {error ? <p className="feedback feedback--error">{error}</p> : null}
-            <button className="button" disabled={busy} type="submit">
-              {busy ? "Submitting..." : "Submit resume"}
-            </button>
-          </form>
-          <aside className="score-panel applicant-dashboard-stack">
-            <section className="panel applicant-posting-panel">
-              {selectedPosting ? (
-                <>
-                  <div className="applicant-posting-hero">
-                    <div className="applicant-posting-hero__copy">
-                      <span className="section-kicker">Posting details</span>
-                      <h2>{selectedPosting.title}</h2>
-                      <div className="applicant-job-meta applicant-job-meta--hero">
-                        <span className="candidate-chip candidate-chip--muted">
-                          {getJobPostingCategoryLabel(selectedPosting.industry_category)}
-                        </span>
-                        {selectedPosting.employment_type ? (
-                          <span className="candidate-chip candidate-chip--muted">{selectedPosting.employment_type}</span>
-                        ) : null}
-                        {selectedPosting.department ? (
-                          <span className="candidate-chip candidate-chip--muted">{selectedPosting.department}</span>
-                        ) : null}
-                      </div>
-                    </div>
+              <>
+                <div className="job-detail-hero">
+                  <div className="job-detail-hero__copy">
+                    <span className="section-kicker">Job details</span>
+                    <h2>{selectedPosting.title}</h2>
+                    <p>Review the role, team context, and compensation before you apply.</p>
                   </div>
-
-                  <div className="applicant-detail-grid">
-                    <article className="applicant-detail-row">
-                      <span>Role name</span>
-                      <strong>{selectedPosting.title}</strong>
-                    </article>
-                    <article className="applicant-detail-row">
-                      <span>Department</span>
-                      <strong>{selectedPosting.department || "Not listed"}</strong>
-                    </article>
-                    <article className="applicant-detail-row">
-                      <span>Location</span>
-                      <strong>{selectedPosting.location || "Not listed"}</strong>
-                    </article>
-                    <article className="applicant-detail-row">
-                      <span>Compensation</span>
-                      <strong>{selectedPosting.compensation_range || "Not listed"}</strong>
-                    </article>
-                    <article className="applicant-detail-row">
-                      <span>Employment type</span>
-                      <strong>{selectedPosting.employment_type || "Not listed"}</strong>
-                    </article>
-                    <article className="applicant-detail-row">
-                      <span>Category</span>
-                      <strong>{getJobPostingCategoryLabel(selectedPosting.industry_category)}</strong>
-                    </article>
+                  <div className="job-detail-hero__meta">
+                    <span className="job-pill">{getJobPostingCategoryLabel(selectedPosting.industry_category)}</span>
+                    {selectedPosting.employment_type ? <span className="job-pill">{selectedPosting.employment_type}</span> : null}
+                    {selectedPosting.department ? <span className="job-pill">{selectedPosting.department}</span> : null}
                   </div>
-
-                  <section className="applicant-description-card">
-                    <div className="applicant-section-header">
-                      <h3>Job description</h3>
-                    </div>
-                    <p className="applicant-description-text">{selectedPosting.content || "No description available."}</p>
-                  </section>
-                </>
-              ) : (
-                <div className="applicant-posting-empty">
-                  <span className="section-kicker">Posting details</span>
-                  <h2>Select a job posting</h2>
-                  <p>Choose a role from the form to review the description, department, location, and compensation before you apply.</p>
                 </div>
-              )}
-            </section>
 
-            <section className="panel applicant-submissions-panel">
-              <div className="applicant-section-header">
-                <h2>Your submissions</h2>
+                <div className="job-summary-grid">
+                  <article className="job-summary-card">
+                    <span>Location</span>
+                    <strong>{selectedPosting.location || "Not listed"}</strong>
+                  </article>
+                  <article className="job-summary-card">
+                    <span>Compensation</span>
+                    <strong>{selectedPosting.compensation_range || "Not listed"}</strong>
+                  </article>
+                  <article className="job-summary-card">
+                    <span>Department</span>
+                    <strong>{selectedPosting.department || "Not listed"}</strong>
+                  </article>
+                  <article className="job-summary-card">
+                    <span>Schedule</span>
+                    <strong>{selectedPosting.employment_type || "Not listed"}</strong>
+                  </article>
+                </div>
+
+                <section className="job-description-panel">
+                  <div className="applicant-section-header">
+                    <h3>Job description</h3>
+                  </div>
+                  <p className="applicant-description-text">{selectedPosting.content || "No description available."}</p>
+                </section>
+              </>
+            ) : (
+              <div className="applicant-posting-empty">
+                <span className="section-kicker">Job details</span>
+                <h2>Select a job</h2>
+                <p>Choose a role from the left to review the posting before you apply.</p>
               </div>
-              <div className="list">
+            )}
+          </section>
+
+          <aside className="application-sidebar">
+            <form className="apply-card" onSubmit={handleSubmit}>
+              <div className="apply-card__header">
+                <span className="section-kicker">Apply now</span>
+                <h3>{selectedPosting ? `Apply for ${selectedPosting.title}` : "Apply to a role"}</h3>
+              </div>
+              <label className="field">
+                <span>Selected posting</span>
+                <input readOnly type="text" value={selectedPosting ? selectedPosting.title : "Choose a role first"} />
+              </label>
+              <label className="field">
+                <span>Resume file</span>
+                <input
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                  type="file"
+                />
+              </label>
+              {message ? <p className="feedback feedback--success">{message}</p> : null}
+              {error ? <p className="feedback feedback--error">{error}</p> : null}
+              <button className="button" disabled={busy || !selectedJobPostingId} type="submit">
+                {busy ? "Submitting..." : "Submit application"}
+              </button>
+            </form>
+
+            <section className="application-history-panel">
+              <div className="applicant-section-header">
+                <div>
+                  <span className="section-kicker">Application history</span>
+                  <h3>Your submissions</h3>
+                </div>
+                <span className="candidate-list-summary">{submissions.length} total</span>
+              </div>
+              <div className="applicant-tracker-list">
                 {submissions.map((submission) => (
-                  <article className="list-item" key={submission.id}>
-                    <div>
-                      <strong>{submission.title}</strong>
-                      <p>
-                        {submission.anonymous_id} | {submission.review_status}
-                      </p>
+                  <article className="applicant-tracker-card" key={submission.id}>
+                    <div className="applicant-tracker-card__top">
+                      <div>
+                        <strong>{submission.title}</strong>
+                        <p>{submission.anonymous_id}</p>
+                      </div>
+                      <span className={`status-pill status-pill--${getStatusTone(submission.review_status)}`}>
+                        {formatReviewStatus(submission.review_status)}
+                      </span>
                     </div>
-                    <span>{new Date(submission.submitted_at).toLocaleDateString()}</span>
+
+                    <div className="applicant-job-meta">
+                      <span className="candidate-chip candidate-chip--muted">
+                        {getJobPostingCategoryLabel(submission.industry_category)}
+                      </span>
+                      {submission.location ? (
+                        <span className="candidate-chip candidate-chip--muted">{submission.location}</span>
+                      ) : null}
+                    </div>
+
+                    <div className="applicant-tracker-grid">
+                      <article className="applicant-tracker-stat">
+                        <span>Submitted</span>
+                        <strong>{new Date(submission.submitted_at).toLocaleDateString()}</strong>
+                      </article>
+                      <article className="applicant-tracker-stat">
+                        <span>Processing</span>
+                        <strong>{formatProcessingStatus(submission.status)}</strong>
+                      </article>
+                      <article className="applicant-tracker-stat">
+                        <span>Contact</span>
+                        <strong>{submission.contact_requested ? "Requested by HR" : "Blind review active"}</strong>
+                      </article>
+                    </div>
                   </article>
                 ))}
                 {!submissions.length ? <p className="feedback">No submissions yet.</p> : null}

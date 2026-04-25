@@ -36,13 +36,13 @@ export function Shell({ title, children }: ShellProps) {
 
   return (
     <div className="app-shell">
-      <header className="hero">
-        <div className="hero__bar">
-          <Link className="hero__brand" to="/">
-            <span className="hero__eyebrow">Ethics Hiring Tracker</span>
-            <span className="hero__brand-mark">Fair posting workspace</span>
+      <header className="shell-header">
+        <div className="shell-header__bar">
+          <Link className="shell-brand" to="/">
+            <span className="shell-brand__eyebrow">Ethics Hiring Tracker</span>
+            <span className="shell-brand__mark">Bias-aware recruiting workspace</span>
           </Link>
-          <nav className="hero__nav">
+          <nav className="shell-nav">
             {navigation.map((item) => (
               <NavLink
                 key={item.to}
@@ -59,14 +59,13 @@ export function Shell({ title, children }: ShellProps) {
             ) : null}
           </nav>
         </div>
-        <nav className="hero__nav">
-          <div className="hero__content">
+        <div className="shell-hero">
+          <div className="shell-hero__content">
+            <span className="section-kicker">Hiring operations</span>
             <h1>{title}</h1>
-            <p>
-              Bias gets designed out of the workflow before hiring decisions are made.
-            </p>
+            <p>Bias gets designed out of the workflow before hiring decisions are made.</p>
           </div>
-        </nav>
+        </div>
       </header>
       <main className="page">{children}</main>
     </div>

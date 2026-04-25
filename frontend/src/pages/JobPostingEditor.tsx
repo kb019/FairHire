@@ -261,7 +261,7 @@ export function JobPostingEditorPage() {
                   <span className="section-kicker">Job narrative</span>
                   <h3>Responsibilities and requirements</h3>
                 </div>
-                <p>Write in plain, specific language. Avoid wish lists and vague “culture fit” language.</p>
+                <p>Write in plain, specific language. Avoid wish lists and vague team-fit language.</p>
               </div>
               <label className="field field--editor">
                 <span>Job description</span>
