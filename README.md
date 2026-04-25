@@ -6,6 +6,8 @@ Ethics Hiring Tracker is a bias-aware hiring workflow that turns fairness from a
 
 **Hosted application:** [https://fairhire-frontend.onrender.com/](https://fairhire-frontend.onrender.com/)
 
+**The application takes some time to start since i have hosted it on free plan**
+
 The system supports two user journeys:
 
 - `HR teams` create job postings, review compliance issues, monitor trends, and evaluate anonymized candidates
