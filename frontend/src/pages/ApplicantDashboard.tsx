@@ -120,7 +120,11 @@ export function ApplicantDashboardPage() {
   }
 
   return (
-    <Shell title="Job opportunities">
+    <Shell
+      title="Job opportunities"
+      eyebrow="Applicant portal"
+      description="Browse active roles, review compensation and job details, and track every application from one clean portal."
+    >
       <section className="panel panel--wide recruiting-shell">
         <div className="recruiting-toolbar">
           <div>

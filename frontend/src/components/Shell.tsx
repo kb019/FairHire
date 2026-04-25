@@ -4,13 +4,28 @@ import { clearStoredAuth, getStoredToken, getStoredUserType } from "../api/clien
 
 interface ShellProps {
   title: string;
+  eyebrow?: string;
+  description?: string;
   children: ReactNode;
 }
 
-export function Shell({ title, children }: ShellProps) {
+export function Shell({ title, eyebrow, description, children }: ShellProps) {
   const navigate = useNavigate();
   const token = getStoredToken();
   const userType = getStoredUserType();
+  const defaultEyebrow = token
+    ? userType === "hr"
+      ? "HR workspace"
+      : "Applicant workspace"
+    : "Recruiting platform";
+  const contextPill = token
+    ? userType === "hr"
+      ? "HR access"
+      : "Applicant access"
+    : "Shared access";
+  const contextDetail = token
+    ? "Session stays active until you choose to log out."
+    : "Bias-aware posting, application, and candidate review in one product.";
   const navigation = token
     ? userType === "hr"
       ? [
@@ -59,14 +74,18 @@ export function Shell({ title, children }: ShellProps) {
             ) : null}
           </nav>
         </div>
-        <div className="shell-hero">
-          <div className="shell-hero__content">
-            <span className="section-kicker">Hiring operations</span>
-            <h1>{title}</h1>
-            <p>Bias gets designed out of the workflow before hiring decisions are made.</p>
-          </div>
-        </div>
       </header>
+      <section className="shell-pagehead">
+        <div className="shell-pagehead__copy">
+          <span className="section-kicker">{eyebrow ?? defaultEyebrow}</span>
+          <h1>{title}</h1>
+          {description ? <p>{description}</p> : null}
+        </div>
+        <div className="shell-pagehead__meta">
+          <span className="shell-pagehead__pill">{contextPill}</span>
+          <p>{contextDetail}</p>
+        </div>
+      </section>
       <main className="page">{children}</main>
     </div>
   );

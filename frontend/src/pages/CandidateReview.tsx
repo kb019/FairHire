@@ -162,7 +162,11 @@ export function CandidateReviewPage() {
   }
 
   return (
-    <Shell title="Anonymous candidate review">
+    <Shell
+      title="Anonymous candidate review"
+      eyebrow="Candidate evaluation"
+      description="Review fit, skills, experience, and redacted resume details before deciding whether to reveal contact information."
+    >
       <section className="candidate-review-shell">
         {error ? <p className="feedback feedback--error">{error}</p> : null}
         <div className="candidate-review-grid">

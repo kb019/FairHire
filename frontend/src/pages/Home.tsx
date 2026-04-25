@@ -3,16 +3,19 @@ import { Shell } from "../components/Shell";
 
 export function HomePage() {
   return (
-    <Shell title="Fairer hiring, enforced in the product">
+    <Shell
+      title="Bias-aware hiring, built into the workflow"
+      eyebrow="Platform overview"
+      description="Design inclusive job postings, run blind resume intake, and review candidates in one consistent recruiting workspace."
+    >
       <section className="panel panel--wide landing-shell">
         <div className="landing-hero">
           <div className="landing-hero__copy">
-            <span className="section-kicker">Product overview</span>
-            <h2>One recruiting workspace for fair job design, blind screening, and accountable review.</h2>
+            <span className="section-kicker">Hiring product</span>
+            <h2>One system for compliant posting design, structured applications, and blind candidate review.</h2>
             <p>
-              The platform helps HR teams publish cleaner job postings, applicants apply through a
-              transparent experience, and candidate review stays anonymized until there is a deliberate
-              decision to reveal contact details.
+              HR teams draft better roles, applicants see real job details before applying, and hiring
+              decisions stay anchored on qualifications rather than identity or institutional prestige.
             </p>
             <div className="actions">
               <Link className="button" to="/register/hr">
@@ -44,27 +47,27 @@ export function HomePage() {
 
         <div className="feature-grid feature-grid--triple">
           <article className="feature-card">
-            <span className="card__label">Phase 1</span>
-            <h3>Job posting ethics check</h3>
+            <span className="card__label">Role design</span>
+            <h3>Job posting quality review</h3>
             <p>
-              HR gets immediate feedback on biased language, exclusionary requirements, compensation
-              clarity, and inclusive language before a role goes live.
+              Publishing starts with role clarity, compensation transparency, and language review before a
+              requisition reaches applicants.
             </p>
           </article>
           <article className="feature-card">
-            <span className="card__label">Phase 2</span>
+            <span className="card__label">Application flow</span>
             <h3>Blind resume intake</h3>
             <p>
-              Applicants submit once. The system parses the resume, redacts sensitive identity signals,
-              and stores a structured review-ready profile.
+              Applicants upload once, the platform parses the resume, and non-job signals are withheld from
+              the first review pass.
             </p>
           </article>
           <article className="feature-card">
-            <span className="card__label">Phase 3</span>
-            <h3>Anonymous candidate review</h3>
+            <span className="card__label">Hiring decisions</span>
+            <h3>Structured candidate evaluation</h3>
             <p>
-              Hiring teams review fit, experience, and qualifications in a consistent interface without
-              seeing institution prestige or personal identifiers.
+              Teams compare fit, experience, and missing requirements in a consistent interface before
+              choosing to reveal contact details.
             </p>
           </article>
         </div>

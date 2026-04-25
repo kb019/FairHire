@@ -42,7 +42,11 @@ export function RegisterHRPage() {
   }
 
   return (
-    <Shell title="Create HR account">
+    <Shell
+      title="Create HR account"
+      eyebrow="HR onboarding"
+      description="Set up the hiring-side workspace for job posting review, compliance tracking, and blind candidate evaluation."
+    >
       <section className="auth-shell">
         <aside className="auth-showcase">
           <div className="auth-showcase__hero">

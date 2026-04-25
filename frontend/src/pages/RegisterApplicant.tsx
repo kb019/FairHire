@@ -43,7 +43,11 @@ export function RegisterApplicantPage() {
   }
 
   return (
-    <Shell title="Create applicant account">
+    <Shell
+      title="Create applicant account"
+      eyebrow="Applicant onboarding"
+      description="Create one account to review roles, submit your resume, and track the hiring process from the same portal."
+    >
       <section className="auth-shell">
         <aside className="auth-showcase">
           <div className="auth-showcase__hero">

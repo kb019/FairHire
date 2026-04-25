@@ -28,13 +28,17 @@ export function LoginPage() {
   }
 
   return (
-    <Shell title="Sign in">
+    <Shell
+      title="Sign in"
+      eyebrow="Account access"
+      description="Use one account to move between job postings, applications, and candidate review without losing your place."
+    >
       <section className="auth-shell">
         <aside className="auth-showcase">
           <div className="auth-showcase__hero">
-            <span className="section-kicker">Recruiting platform</span>
-            <h2>Access the same job application workspace used for role review, resume intake, and hiring decisions.</h2>
-            <p>Sign in once and continue where you left off, whether you are managing postings or applying to roles.</p>
+            <span className="section-kicker">Recruiting workspace</span>
+            <h2>Access the same product used for role design, resume intake, and hiring decisions.</h2>
+            <p>Sessions stay active until logout, so you can move across screens without repeating authentication.</p>
           </div>
           <div className="auth-showcase__grid">
             <article className="auth-showcase__item">
@@ -52,7 +56,7 @@ export function LoginPage() {
 
         <form className="auth-card" onSubmit={handleSubmit}>
           <div className="auth-card__header">
-            <span className="section-kicker">Account access</span>
+            <span className="section-kicker">Secure entry</span>
             <h2>Sign in</h2>
             <p>Use the account you already created for HR or applicant access.</p>
           </div>

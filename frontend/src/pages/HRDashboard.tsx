@@ -69,7 +69,11 @@ export function HRDashboardPage() {
   }
 
   return (
-    <Shell title="HR dashboard">
+    <Shell
+      title="HR dashboard"
+      eyebrow="Hiring operations"
+      description="Monitor open requisitions, watch compliance performance, and move from posting review into candidate evaluation."
+    >
       <section className="panel panel--wide workspace-shell">
         <div className="workspace-grid">
           <div className="workspace-primary">

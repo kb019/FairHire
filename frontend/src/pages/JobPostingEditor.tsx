@@ -135,7 +135,11 @@ export function JobPostingEditorPage() {
   }
 
   return (
-    <Shell title="Compose a job posting">
+    <Shell
+      title="Compose a job posting"
+      eyebrow="Job authoring"
+      description="Draft the role, compensation, and requirements in one workspace while the review rail updates against the posting."
+    >
       <section className="editor-shell">
         <div className="editor-hero">
           <div className="editor-hero__copy">
